@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script src="https://cdn.appid.cloud.ibm.com/appid-0.3.0.min.js"></script>
+</head>
+<body>
+    <h1>Login to App ID</h1>
+    <div id="login">
+        <div v-if="isLoggedIn">
+            <p><label for="access-token">Access Token </label></p>
+            <p><textarea id="access-token">{{ accessToken }}</textarea></p>
+            <p><label for="id-token">ID Token </label></p>
+            <p><textarea id="id-token">{{ idToken }}</textarea></p>
+        </div>
+        <div v-if="isLoading">
+            <p>...</p>
+        </div>
+        <div v-if="error">An error occurred : {{ error }}</div>
+    </div>
+    <script>
+    const Login = {
+      data() {
+        return {
+          accessToken: "",
+          idToken: "",
+          error: "",
+          isLoading: false
+        }
+      },
+      async mounted() {
+        this.login();
+      },
+      computed: {
+        isLoggedIn() {
+          return this.accessToken !== "" && this.idToken !== "";
+        }
+      },
+      methods: {
+        async login() {
+          this.error = "";
+          const appID = new AppID();
+          await appID.init({
+            clientId: 'e269d282-37e1-48a6-b331-22684f33dd34',
+            discoveryEndpoint: 'https://eu-gb.appid.cloud.ibm.com/oauth/v4/a0dc5cc4-15e4-4765-87d4-728223050243/.well-known/openid-configuration'
+          });
+
+          try {
+            this.isLoading = true;
+            const tokens = await appID.signin();
+            this.accessToken = tokens.accessToken;
+            this.idToken = tokens.idToken;
+          } catch(e) {
+            console.error(e);
+            this.error = "Failed to login : " + e.message;
+          } finally {
+            this.isLoading = false;
+          }
+        }
+      }
+    }
+    Vue.createApp(Login).mount("#login");
+    </script>
+</body>
+</html>
